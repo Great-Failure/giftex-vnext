@@ -57,6 +57,7 @@ api/coverage
 .deployment-config.json
 deployment-output.json
 .github-actions-config.json
+.azure/deployments/
 
 # Azurite storage emulator
 __azurite_db_*.json
