@@ -84,6 +84,10 @@ var logAnalyticsName = 'ss-logs-${uniqueSuffix}'
 var appInsightsName = 'ss-insights-${uniqueSuffix}'
 var databaseName = 'zavaexchangegift'
 var containerName = 'games'
+// v2 Exchange-centric data model (see docs/data-model-v2.md). Partition key
+// `/exchangeId`, used by all v2 endpoints (#4 lifecycle, #5 invites/RSVP, #6
+// matching, #12 notifications). v1 `games` container above remains untouched.
+var v2ContainerName = 'exchanges'
 
 // Retention based on environment
 // ⚠️  IMPORTANT: PerGB2018 SKU only allows specific retention values: 30, 31, 60, 90, 120, 180, 270, 365, 550, 730
@@ -200,6 +204,48 @@ resource container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/container
   }
 }
 
+// ----------------------------------------------------------------------------
+// v2 Exchange-centric container
+// ----------------------------------------------------------------------------
+// Partitioned by /exchangeId; all child entities (invite, participant,
+// wishlistItem, match, notificationEvent) co-locate in the parent exchange's
+// partition. Composite indexes per docs/data-model-v2.md §Recommended indexing.
+// Free-text fields are excluded from indexing to keep RU cost low.
+resource v2Container 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases/containers@2024-11-15' = {
+  parent: database
+  name: v2ContainerName
+  properties: {
+    resource: {
+      id: v2ContainerName
+      partitionKey: {
+        paths: ['/exchangeId']
+        kind: 'Hash'
+      }
+      indexingPolicy: {
+        indexingMode: 'consistent'
+        automatic: true
+        includedPaths: [{ path: '/*' }]
+        excludedPaths: [
+          { path: '/_etag/?' }
+          { path: '/description/?' }
+          { path: '/generalNotes/?' }
+          { path: '/notes/?' }
+        ]
+        compositeIndexes: [
+          [
+            { path: '/exchangeId', order: 'ascending' }
+            { path: '/entityType', order: 'ascending' }
+          ]
+          [
+            { path: '/entityType', order: 'ascending' }
+            { path: '/status', order: 'ascending' }
+          ]
+        ]
+      }
+    }
+  }
+}
+
 // ============================================================================
 // Static Web App with Managed Functions
 // ============================================================================
@@ -276,6 +322,7 @@ resource staticWebAppSettings 'Microsoft.Web/staticSites/config@2024-11-01' = {
       COSMOS_KEY: cosmosAccount.listKeys().primaryMasterKey
       COSMOS_DATABASE_NAME: databaseName
       COSMOS_CONTAINER_NAME: containerName
+      COSMOS_V2_CONTAINER_NAME: v2ContainerName
       // Application Insights
       APPLICATIONINSIGHTS_CONNECTION_STRING: appInsights.properties.ConnectionString
       APPINSIGHTS_INSTRUMENTATIONKEY: appInsights.properties.InstrumentationKey
