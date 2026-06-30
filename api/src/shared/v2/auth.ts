@@ -129,10 +129,8 @@ function isExpired(expiresAtIso?: string): boolean {
   return expiry < Date.now()
 }
 
-function assertTokenHashMatch(candidateToken: string, expectedTokenHash: string): void {
-  const candidateHash = hashToken(candidateToken)
-
-  const left = Buffer.from(candidateHash, 'utf8')
+function assertTokenHashMatch(candidateTokenHash: string, expectedTokenHash: string): void {
+  const left = Buffer.from(candidateTokenHash, 'utf8')
   const right = Buffer.from(expectedTokenHash, 'utf8')
 
   if (left.length !== right.length || !crypto.timingSafeEqual(left, right)) {
@@ -152,13 +150,14 @@ async function authenticateOrganizer(request: HttpRequest): Promise<OrganizerPri
     throw new ApiAuthError(ApiAuthErrorCode.TOKEN_MALFORMED, 401, 'Organizer token format is invalid')
   }
 
-  const exchange = await queryExchangeByOrganizerTokenHash(split.exchangeId, hashToken(organizerToken))
+  const organizerTokenHash = hashToken(organizerToken)
+  const exchange = await queryExchangeByOrganizerTokenHash(split.exchangeId, organizerTokenHash)
 
   if (!exchange) {
     throw new ApiAuthError(ApiAuthErrorCode.TOKEN_INVALID, 403, 'Invalid organizer token')
   }
 
-  assertTokenHashMatch(organizerToken, exchange.organizerTokenHash)
+  assertTokenHashMatch(organizerTokenHash, exchange.organizerTokenHash)
 
   if (isExpired(exchange.organizerTokenExpiresAt)) {
     throw new ApiAuthError(ApiAuthErrorCode.TOKEN_EXPIRED, 401, 'Organizer token has expired')
@@ -183,13 +182,14 @@ async function authenticateParticipant(request: HttpRequest): Promise<Participan
     throw new ApiAuthError(ApiAuthErrorCode.TOKEN_MALFORMED, 401, 'Invite token format is invalid')
   }
 
-  const invite = await queryInviteByTokenHash(split.exchangeId, hashToken(inviteToken))
+  const inviteTokenHash = hashToken(inviteToken)
+  const invite = await queryInviteByTokenHash(split.exchangeId, inviteTokenHash)
 
   if (!invite) {
     throw new ApiAuthError(ApiAuthErrorCode.TOKEN_INVALID, 403, 'Invalid invite token')
   }
 
-  assertTokenHashMatch(inviteToken, invite.inviteTokenHash)
+  assertTokenHashMatch(inviteTokenHash, invite.inviteTokenHash)
 
   const exchange = await getExchangeById(invite.exchangeId)
 
