@@ -15,10 +15,14 @@ function isEmailConfigured(): boolean {
   return Boolean(process.env.ACS_CONNECTION_STRING && process.env.ACS_SENDER_ADDRESS)
 }
 
-const CRITICAL_TYPES: ReadonlySet<NotificationType> = new Set(['inviteSent', 'rsvpAccepted', 'matchReveal'])
-
 export function generateUnsubscribeToken(recipientEmail: string): string {
-  const secret = process.env.UNSUBSCRIBE_HMAC_SECRET || 'dev-secret-change-me'
+  const secret = process.env.UNSUBSCRIBE_HMAC_SECRET
+  if (!secret) {
+    if (process.env.ENVIRONMENT === 'prod') {
+      throw new Error('UNSUBSCRIBE_HMAC_SECRET must be configured in production')
+    }
+    return crypto.createHmac('sha256', 'dev-secret-change-me').update(recipientEmail.toLowerCase()).digest('base64url')
+  }
   return crypto.createHmac('sha256', secret).update(recipientEmail.toLowerCase()).digest('base64url')
 }
 
@@ -313,4 +317,3 @@ export async function sendGiftByReminderNotification(
   }
 }
 
-void CRITICAL_TYPES

@@ -602,4 +602,11 @@ export const en = {
     v2Loading: "Loading...",
     v2Error: "An error occurred",
     v2GoToV2Exchange: "Create v2 Exchange",
+
+    // v2 review follow-ups
+    v2AcceptInviteFirst: "Please accept your invitation first.",
+    v2ParticipantLimitReached: "Participant limit reached.",
+    v2SlotsRemaining: "{count} slot(s) remaining.",
+    v2BackToExchange: "Back to Exchange",
+    v2WishlistItemsCount: "{count} wishlist item(s)",
 }

@@ -681,4 +681,11 @@ export const ja = {
     v2Loading: "読み込み中...",
     v2Error: "エラーが発生しました",
     v2GoToV2Exchange: "v2交換会を作成",
+
+    // v2 review follow-ups
+    v2AcceptInviteFirst: "先に招待を承諾してください。",
+    v2ParticipantLimitReached: "参加者の上限に達しました。",
+    v2SlotsRemaining: "残り {count} 枠です。",
+    v2BackToExchange: "交換会に戻る",
+    v2WishlistItemsCount: "ほしい物リスト {count} 件",
 }

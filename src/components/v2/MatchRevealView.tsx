@@ -143,7 +143,7 @@ export function MatchRevealView() {
 
           <CardFooter className="justify-end border-t pt-6">
             <Button variant="outline" onClick={() => navigate(`/wishlist?token=${encodeURIComponent(token)}`)}>
-              Back to Exchange
+              {t('v2BackToExchange')}
             </Button>
           </CardFooter>
         </Card>

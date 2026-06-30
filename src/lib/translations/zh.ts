@@ -681,4 +681,11 @@ export const zh = {
     v2Loading: "加载中...",
     v2Error: "发生错误",
     v2GoToV2Exchange: "创建 v2 交换",
+
+    // v2 review follow-ups
+    v2AcceptInviteFirst: "请先接受你的邀请。",
+    v2ParticipantLimitReached: "已达到参与人数上限。",
+    v2SlotsRemaining: "还剩 {count} 个名额。",
+    v2BackToExchange: "返回交换",
+    v2WishlistItemsCount: "愿望清单项目 {count} 个",
 }

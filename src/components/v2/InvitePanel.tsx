@@ -135,7 +135,7 @@ export function InvitePanel({ exchangeId, organizerToken, maxParticipants, parti
         </div>
         {isNearLimit && (
           <p className="text-sm text-amber-600">
-            {cannotAddInvite ? 'Participant limit reached.' : `${remainingSlots} slot(s) remaining.`}
+            {cannotAddInvite ? t('v2ParticipantLimitReached') : t('v2SlotsRemaining').replace('{count}', String(remainingSlots))}
           </p>
         )}
       </div>

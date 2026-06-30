@@ -580,4 +580,11 @@ export const de = {
     v2Loading: "Wird geladen...",
     v2Error: "Ein Fehler ist aufgetreten",
     v2GoToV2Exchange: "v2-Austausch erstellen",
+
+    // v2 review follow-ups
+    v2AcceptInviteFirst: "Bitte nehmen Sie zuerst Ihre Einladung an.",
+    v2ParticipantLimitReached: "Teilnehmerlimit erreicht.",
+    v2SlotsRemaining: "Noch {count} Platz/Plätze frei.",
+    v2BackToExchange: "Zurück zum Austausch",
+    v2WishlistItemsCount: "{count} Wunschlisten-Eintrag/-Einträge",
 }

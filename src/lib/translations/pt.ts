@@ -601,4 +601,11 @@ export const pt = {
     v2Loading: "Carregando...",
     v2Error: "Ocorreu um erro",
     v2GoToV2Exchange: "Criar troca v2",
+
+    // v2 review follow-ups
+    v2AcceptInviteFirst: "Aceite seu convite primeiro.",
+    v2ParticipantLimitReached: "O limite de participantes foi atingido.",
+    v2SlotsRemaining: "Restam {count} vaga(s).",
+    v2BackToExchange: "Voltar para a troca",
+    v2WishlistItemsCount: "{count} item(ns) na lista de desejos",
 }

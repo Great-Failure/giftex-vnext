@@ -218,7 +218,7 @@ export function WishlistView() {
 
             {!isLoading && inviteContext && !isAccepted && (
               <div className="space-y-4 rounded-lg border border-primary/20 bg-primary/5 p-4">
-                <p className="text-sm font-medium">Please accept your invitation first.</p>
+                <p className="text-sm font-medium">{t('v2AcceptInviteFirst')}</p>
                 <Button variant="outline" onClick={() => navigate(`/rsvp?token=${encodeURIComponent(token)}`)}>
                   {t('v2RSVPTitle')}
                 </Button>

@@ -25,7 +25,7 @@ export function ParticipantsPanel({ participants }: ParticipantsPanelProps) {
             <div>
               <p className="font-medium">{participant.displayName}</p>
               <p className="text-sm text-muted-foreground">
-                {participant.wishlistItemCount} wishlist item(s)
+                {t('v2WishlistItemsCount').replace('{count}', String(participant.wishlistItemCount))}
               </p>
             </div>
           </div>

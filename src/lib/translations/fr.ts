@@ -681,4 +681,11 @@ export const fr = {
     v2Loading: "Chargement...",
     v2Error: "Une erreur s'est produite",
     v2GoToV2Exchange: "Créer un échange v2",
+
+    // v2 review follow-ups
+    v2AcceptInviteFirst: "Veuillez d'abord accepter votre invitation.",
+    v2ParticipantLimitReached: "Limite de participants atteinte.",
+    v2SlotsRemaining: "Il reste {count} place(s).",
+    v2BackToExchange: "Retour à l'échange",
+    v2WishlistItemsCount: "{count} article(s) dans la liste de souhaits",
 }

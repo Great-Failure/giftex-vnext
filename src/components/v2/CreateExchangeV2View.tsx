@@ -90,6 +90,12 @@ export function CreateExchangeV2View() {
     setError(null)
 
     try {
+      const budget = {
+        currency: form.budgetCurrency,
+        ...(form.budgetMin.trim() ? { amountMin: form.budgetMin.trim() } : {}),
+        ...(form.budgetMax.trim() ? { amountMax: form.budgetMax.trim() } : {}),
+      }
+
       const payload = {
         name: form.name.trim(),
         description: form.description.trim() || undefined,
@@ -97,21 +103,12 @@ export function CreateExchangeV2View() {
         exchangeTime: form.exchangeTime || undefined,
         location: form.location.trim() || undefined,
         generalNotes: form.generalNotes.trim() || undefined,
-        budget: {
-          currency: form.budgetCurrency,
-          amountMin: form.budgetMin.trim() || undefined,
-          amountMax: form.budgetMax.trim() || undefined,
-        },
+        budget,
         rsvpDeadline: form.rsvpDeadline || undefined,
         wishlistDeadline: form.wishlistDeadline || undefined,
         organizerEmail: form.organizerEmail.trim() || undefined,
         organizerLanguage: form.organizerLanguage,
         maxParticipants: maxParticipantsNumber,
-      }
-
-      if (!payload.budget.amountMin && !payload.budget.amountMax) {
-        delete payload.budget.amountMin
-        delete payload.budget.amountMax
       }
 
       const { exchange, organizerToken } = await createExchange(payload)

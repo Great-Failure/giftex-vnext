@@ -580,4 +580,11 @@ export const nl = {
     v2Loading: "Laden...",
     v2Error: "Er is een fout opgetreden",
     v2GoToV2Exchange: "v2-uitwisseling maken",
+
+    // v2 review follow-ups
+    v2AcceptInviteFirst: "Accepteer eerst je uitnodiging.",
+    v2ParticipantLimitReached: "De deelnemerslimiet is bereikt.",
+    v2SlotsRemaining: "Nog {count} plek(ken) over.",
+    v2BackToExchange: "Terug naar de uitwisseling",
+    v2WishlistItemsCount: "{count} item(s) op de verlanglijst",
 }
