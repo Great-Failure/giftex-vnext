@@ -69,8 +69,11 @@ export function CreateExchangeV2View() {
   })
 
   const canContinue = form.name.trim().length > 0 && form.exchangeDate.trim().length > 0
-  const maxParticipantsNumber = Number.parseInt(form.maxParticipants || DEFAULT_MAX_PARTICIPANTS, 10)
-  const maxParticipantsValid = Number.isInteger(maxParticipantsNumber) && maxParticipantsNumber >= 3 && maxParticipantsNumber <= 50
+  const maxParticipantsValue = form.maxParticipants.trim() || DEFAULT_MAX_PARTICIPANTS
+  const maxParticipantsValid = /^\d+$/.test(maxParticipantsValue)
+    && Number.parseInt(maxParticipantsValue, 10) >= 3
+    && Number.parseInt(maxParticipantsValue, 10) <= 50
+  const maxParticipantsNumber = maxParticipantsValid ? Number.parseInt(maxParticipantsValue, 10) : Number.NaN
 
   const progressLabels = useMemo(
     () => [t('v2StepEventDetails'), t('v2StepConfiguration')],

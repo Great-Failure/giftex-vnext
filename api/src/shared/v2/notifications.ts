@@ -15,14 +15,29 @@ function isEmailConfigured(): boolean {
   return Boolean(process.env.ACS_CONNECTION_STRING && process.env.ACS_SENDER_ADDRESS)
 }
 
-export function generateUnsubscribeToken(recipientEmail: string): string {
-  const secret = process.env.UNSUBSCRIBE_HMAC_SECRET
-  if (!secret) {
-    if (process.env.ENVIRONMENT === 'prod') {
-      throw new Error('UNSUBSCRIBE_HMAC_SECRET must be configured in production')
-    }
-    return crypto.createHmac('sha256', 'dev-secret-change-me').update(recipientEmail.toLowerCase()).digest('base64url')
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function getUnsubscribeSecret(): string {
+  const configured = process.env.UNSUBSCRIBE_HMAC_SECRET
+  if (configured) return configured
+
+  const environment = process.env.ENVIRONMENT?.toLowerCase() || ''
+  if (environment === 'pr' || environment === 'dev' || environment === 'local' || environment === 'test') {
+    return 'dev-secret-change-me'
   }
+
+  throw new Error('UNSUBSCRIBE_HMAC_SECRET must be configured')
+}
+
+export function generateUnsubscribeToken(recipientEmail: string): string {
+  const secret = getUnsubscribeSecret()
   return crypto.createHmac('sha256', secret).update(recipientEmail.toLowerCase()).digest('base64url')
 }
 
@@ -94,50 +109,52 @@ interface EmailContent { subject: string; html: string; plainText: string }
 
 function inviteSentTemplate(exchange: Exchange, invite: Invite, rsvpLink: string, lang: Language): EmailContent {
   const name = invite.suggestedName || invite.email
+  const safeName = escapeHtml(name)
+  const safeExchangeName = escapeHtml(exchange.name)
   switch (lang) {
     case 'es': return {
       subject: `Estás invitado/a a "${exchange.name}"`,
-      html: `<p>Hola ${name},</p><p>Estás invitado/a al intercambio de regalos "<strong>${exchange.name}</strong>" el ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Acepta o declina la invitación</a></p>`,
+      html: `<p>Hola ${safeName},</p><p>Estás invitado/a al intercambio de regalos "<strong>${safeExchangeName}</strong>" el ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Acepta o declina la invitación</a></p>`,
       plainText: `Estás invitado/a a "${exchange.name}" el ${exchange.exchangeDate}. RSVP: ${rsvpLink}`,
     }
     case 'pt': return {
       subject: `Você foi convidado para "${exchange.name}"`,
-      html: `<p>Olá ${name},</p><p>Você foi convidado para a troca de presentes "<strong>${exchange.name}</strong>" em ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Aceitar ou recusar o convite</a></p>`,
+      html: `<p>Olá ${safeName},</p><p>Você foi convidado para a troca de presentes "<strong>${safeExchangeName}</strong>" em ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Aceitar ou recusar o convite</a></p>`,
       plainText: `Você foi convidado para "${exchange.name}" em ${exchange.exchangeDate}. RSVP: ${rsvpLink}`,
     }
     case 'fr': return {
       subject: `Vous êtes invité à "${exchange.name}"`,
-      html: `<p>Bonjour ${name},</p><p>Vous êtes invité à l'échange de cadeaux "<strong>${exchange.name}</strong>" le ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Accepter ou refuser l'invitation</a></p>`,
+      html: `<p>Bonjour ${safeName},</p><p>Vous êtes invité à l'échange de cadeaux "<strong>${safeExchangeName}</strong>" le ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Accepter ou refuser l'invitation</a></p>`,
       plainText: `Vous êtes invité à "${exchange.name}" le ${exchange.exchangeDate}. RSVP: ${rsvpLink}`,
     }
     case 'it': return {
       subject: `Sei invitato a "${exchange.name}"`,
-      html: `<p>Ciao ${name},</p><p>Sei invitato allo scambio di regali "<strong>${exchange.name}</strong>" il ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Accetta o rifiuta l'invito</a></p>`,
+      html: `<p>Ciao ${safeName},</p><p>Sei invitato allo scambio di regali "<strong>${safeExchangeName}</strong>" il ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Accetta o rifiuta l'invito</a></p>`,
       plainText: `Sei invitato a "${exchange.name}" il ${exchange.exchangeDate}. RSVP: ${rsvpLink}`,
     }
     case 'ja': return {
       subject: `「${exchange.name}」にご招待します`,
-      html: `<p>${name}様、</p><p>${exchange.exchangeDate}に開催される「<strong>${exchange.name}</strong>」のギフト交換にご招待します。</p><p><a href="${rsvpLink}">招待を承諾または辞退する</a></p>`,
+      html: `<p>${safeName}様、</p><p>${exchange.exchangeDate}に開催される「<strong>${safeExchangeName}</strong>」のギフト交換にご招待します。</p><p><a href="${rsvpLink}">招待を承諾または辞退する</a></p>`,
       plainText: `「${exchange.name}」にご招待します（${exchange.exchangeDate}）。RSVP: ${rsvpLink}`,
     }
     case 'zh': return {
       subject: `您被邀请参加“${exchange.name}”`,
-      html: `<p>你好 ${name}，</p><p>您被邀请参加${exchange.exchangeDate}的礼物交换“<strong>${exchange.name}</strong>”。</p><p><a href="${rsvpLink}">接受或拒绝邀请</a></p>`,
+      html: `<p>你好 ${safeName}，</p><p>您被邀请参加${exchange.exchangeDate}的礼物交换“<strong>${safeExchangeName}</strong>”。</p><p><a href="${rsvpLink}">接受或拒绝邀请</a></p>`,
       plainText: `您被邀请参加“${exchange.name}”（${exchange.exchangeDate}）。RSVP: ${rsvpLink}`,
     }
     case 'de': return {
       subject: `Sie sind eingeladen zu "${exchange.name}"`,
-      html: `<p>Hallo ${name},</p><p>Sie sind zum Geschenkeaustausch "<strong>${exchange.name}</strong>" am ${exchange.exchangeDate} eingeladen.</p><p><a href="${rsvpLink}">Einladung annehmen oder ablehnen</a></p>`,
+      html: `<p>Hallo ${safeName},</p><p>Sie sind zum Geschenkeaustausch "<strong>${safeExchangeName}</strong>" am ${exchange.exchangeDate} eingeladen.</p><p><a href="${rsvpLink}">Einladung annehmen oder ablehnen</a></p>`,
       plainText: `Sie sind eingeladen zu "${exchange.name}" am ${exchange.exchangeDate}. RSVP: ${rsvpLink}`,
     }
     case 'nl': return {
       subject: `U bent uitgenodigd voor "${exchange.name}"`,
-      html: `<p>Hallo ${name},</p><p>U bent uitgenodigd voor de cadeau-uitwisseling "<strong>${exchange.name}</strong>" op ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Uitnodiging accepteren of weigeren</a></p>`,
+      html: `<p>Hallo ${safeName},</p><p>U bent uitgenodigd voor de cadeau-uitwisseling "<strong>${safeExchangeName}</strong>" op ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Uitnodiging accepteren of weigeren</a></p>`,
       plainText: `U bent uitgenodigd voor "${exchange.name}" op ${exchange.exchangeDate}. RSVP: ${rsvpLink}`,
     }
     default: return {
       subject: `You're invited to "${exchange.name}"`,
-      html: `<p>Hi ${name},</p><p>You're invited to the gift exchange "<strong>${exchange.name}</strong>" on ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Accept or decline your invitation</a></p>`,
+      html: `<p>Hi ${safeName},</p><p>You're invited to the gift exchange "<strong>${safeExchangeName}</strong>" on ${exchange.exchangeDate}.</p><p><a href="${rsvpLink}">Accept or decline your invitation</a></p>`,
       plainText: `You're invited to "${exchange.name}" on ${exchange.exchangeDate}. RSVP: ${rsvpLink}`,
     }
   }
@@ -145,15 +162,17 @@ function inviteSentTemplate(exchange: Exchange, invite: Invite, rsvpLink: string
 
 function rsvpAcceptedTemplate(exchange: Exchange, participant: Participant, wishlistLink: string, lang: Language): EmailContent {
   const name = participant.displayName
+  const safeName = escapeHtml(name)
+  const safeExchangeName = escapeHtml(exchange.name)
   switch (lang) {
     case 'es': return {
       subject: `¡Confirmado! Eres parte de "${exchange.name}"`,
-      html: `<p>Hola ${name},</p><p>Tu participación en "<strong>${exchange.name}</strong>" está confirmada.</p><p><a href="${wishlistLink}">Añade artículos a tu lista de deseos</a></p>`,
+      html: `<p>Hola ${safeName},</p><p>Tu participación en "<strong>${safeExchangeName}</strong>" está confirmada.</p><p><a href="${wishlistLink}">Añade artículos a tu lista de deseos</a></p>`,
       plainText: `Confirmado: participas en "${exchange.name}". Lista de deseos: ${wishlistLink}`,
     }
     default: return {
       subject: `Confirmed! You're joining "${exchange.name}"`,
-      html: `<p>Hi ${name},</p><p>Your participation in "<strong>${exchange.name}</strong>" is confirmed.</p><p><a href="${wishlistLink}">Add items to your wishlist</a></p>`,
+      html: `<p>Hi ${safeName},</p><p>Your participation in "<strong>${safeExchangeName}</strong>" is confirmed.</p><p><a href="${wishlistLink}">Add items to your wishlist</a></p>`,
       plainText: `Confirmed: you're joining "${exchange.name}". Wishlist: ${wishlistLink}`,
     }
   }
@@ -161,45 +180,52 @@ function rsvpAcceptedTemplate(exchange: Exchange, participant: Participant, wish
 
 function wishlistReminderTemplate(exchange: Exchange, participant: Participant, wishlistLink: string, unsubscribeUrl: string, lang: Language): EmailContent {
   const name = participant.displayName
+  const safeName = escapeHtml(name)
+  const safeExchangeName = escapeHtml(exchange.name)
   switch (lang) {
     case 'es': return {
       subject: 'Recordatorio: añade artículos a tu lista de deseos',
-      html: `<p>Hola ${name},</p><p>El plazo para añadir artículos a tu lista de deseos en "<strong>${exchange.name}</strong>" se acerca.</p><p><a href="${wishlistLink}">Ver mi lista de deseos</a></p><p style="font-size:12px;color:#888;">Si no quieres más recordatorios, <a href="${unsubscribeUrl}">cancela la suscripción</a>.</p>`,
+      html: `<p>Hola ${safeName},</p><p>El plazo para añadir artículos a tu lista de deseos en "<strong>${safeExchangeName}</strong>" se acerca.</p><p><a href="${wishlistLink}">Ver mi lista de deseos</a></p><p style="font-size:12px;color:#888;">Si no quieres más recordatorios, <a href="${unsubscribeUrl}">cancela la suscripción</a>.</p>`,
       plainText: `Recordatorio de lista de deseos para "${exchange.name}". Lista: ${wishlistLink}\nCancelar: ${unsubscribeUrl}`,
     }
     default: return {
       subject: 'Reminder: add items to your wishlist',
-      html: `<p>Hi ${name},</p><p>The wishlist deadline for "<strong>${exchange.name}</strong>" is coming up.</p><p><a href="${wishlistLink}">View my wishlist</a></p><p style="font-size:12px;color:#888;">Don't want reminders? <a href="${unsubscribeUrl}">Unsubscribe</a>.</p>`,
+      html: `<p>Hi ${safeName},</p><p>The wishlist deadline for "<strong>${safeExchangeName}</strong>" is coming up.</p><p><a href="${wishlistLink}">View my wishlist</a></p><p style="font-size:12px;color:#888;">Don't want reminders? <a href="${unsubscribeUrl}">Unsubscribe</a>.</p>`,
       plainText: `Wishlist reminder for "${exchange.name}". Wishlist: ${wishlistLink}\nUnsubscribe: ${unsubscribeUrl}`,
     }
   }
 }
 
 function matchRevealTemplate(exchange: Exchange, giver: Participant, receiver: Participant, matchLink: string, lang: Language): EmailContent {
+  const safeExchangeName = escapeHtml(exchange.name)
+  const safeGiverName = escapeHtml(giver.displayName)
+  const safeReceiverName = escapeHtml(receiver.displayName)
   switch (lang) {
     case 'es': return {
       subject: `¡Los emparejamientos están listos para "${exchange.name}"!`,
-      html: `<p>Hola ${giver.displayName},</p><p>¡Ya están los emparejamientos para "<strong>${exchange.name}</strong>"!</p><p>Tu regalo es para <strong>${receiver.displayName}</strong>.</p><p><a href="${matchLink}">Ver la lista de deseos</a></p>`,
+      html: `<p>Hola ${safeGiverName},</p><p>¡Ya están los emparejamientos para "<strong>${safeExchangeName}</strong>"!</p><p>Tu regalo es para <strong>${safeReceiverName}</strong>.</p><p><a href="${matchLink}">Ver la lista de deseos</a></p>`,
       plainText: `Emparejamiento para "${exchange.name}": regala a ${receiver.displayName}. Detalles: ${matchLink}`,
     }
     default: return {
       subject: `Matches are out for "${exchange.name}"!`,
-      html: `<p>Hi ${giver.displayName},</p><p>The matches are out for "<strong>${exchange.name}</strong>"!</p><p>You'll be giving a gift to <strong>${receiver.displayName}</strong>.</p><p><a href="${matchLink}">View their wishlist</a></p>`,
+      html: `<p>Hi ${safeGiverName},</p><p>The matches are out for "<strong>${safeExchangeName}</strong>"!</p><p>You'll be giving a gift to <strong>${safeReceiverName}</strong>.</p><p><a href="${matchLink}">View their wishlist</a></p>`,
       plainText: `Match reveal for "${exchange.name}": you give to ${receiver.displayName}. Details: ${matchLink}`,
     }
   }
 }
 
 function giftByReminderTemplate(exchange: Exchange, participant: Participant, matchLink: string, unsubscribeUrl: string, lang: Language): EmailContent {
+  const safeName = escapeHtml(participant.displayName)
+  const safeExchangeName = escapeHtml(exchange.name)
   switch (lang) {
     case 'es': return {
       subject: 'Recordatorio: el día del regalo se acerca',
-      html: `<p>Hola ${participant.displayName},</p><p>El intercambio de regalos "<strong>${exchange.name}</strong>" es el ${exchange.exchangeDate}. ¡No olvides tu regalo!</p><p><a href="${matchLink}">Ver los detalles</a></p><p style="font-size:12px;color:#888;"><a href="${unsubscribeUrl}">Cancelar suscripción</a></p>`,
+      html: `<p>Hola ${safeName},</p><p>El intercambio de regalos "<strong>${safeExchangeName}</strong>" es el ${exchange.exchangeDate}. ¡No olvides tu regalo!</p><p><a href="${matchLink}">Ver los detalles</a></p><p style="font-size:12px;color:#888;"><a href="${unsubscribeUrl}">Cancelar suscripción</a></p>`,
       plainText: `Recordatorio: "${exchange.name}" es el ${exchange.exchangeDate}. Detalles: ${matchLink}\nCancelar: ${unsubscribeUrl}`,
     }
     default: return {
       subject: 'Reminder: gift exchange day is coming up',
-      html: `<p>Hi ${participant.displayName},</p><p>The gift exchange "<strong>${exchange.name}</strong>" is on ${exchange.exchangeDate}. Don't forget your gift!</p><p><a href="${matchLink}">View details</a></p><p style="font-size:12px;color:#888;"><a href="${unsubscribeUrl}">Unsubscribe</a></p>`,
+      html: `<p>Hi ${safeName},</p><p>The gift exchange "<strong>${safeExchangeName}</strong>" is on ${exchange.exchangeDate}. Don't forget your gift!</p><p><a href="${matchLink}">View details</a></p><p style="font-size:12px;color:#888;"><a href="${unsubscribeUrl}">Unsubscribe</a></p>`,
       plainText: `Reminder: "${exchange.name}" is on ${exchange.exchangeDate}. Details: ${matchLink}\nUnsubscribe: ${unsubscribeUrl}`,
     }
   }
@@ -240,6 +266,10 @@ export async function sendRsvpAcceptedNotification(
 
   const idempotencyKey = buildIdempotencyKey('rsvpAccepted', exchange.id, participant.id)
   if (await notificationAlreadySent(exchange.id, idempotencyKey)) return
+  if (!rawInviteToken.trim()) {
+    trackEvent(context, 'V2NotificationSkipped', { type: 'rsvpAccepted', exchangeId: exchange.id, participantId: participant.id, reason: 'missing_invite_token' })
+    return
+  }
 
   const wishlistLink = `${appBaseUrl()}/wishlist?token=${encodeURIComponent(rawInviteToken)}`
   const lang: Language = participant.preferredLanguage || exchange.organizerLanguage || 'en'
@@ -262,6 +292,10 @@ export async function sendMatchRevealNotification(
 
   const idempotencyKey = buildIdempotencyKey('matchReveal', exchange.id, giver.id)
   if (await notificationAlreadySent(exchange.id, idempotencyKey)) return
+  if (!rawInviteToken.trim()) {
+    trackEvent(context, 'V2NotificationSkipped', { type: 'matchReveal', exchangeId: exchange.id, participantId: giver.id, reason: 'missing_invite_token' })
+    return
+  }
 
   const matchLink = `${appBaseUrl()}/match?token=${encodeURIComponent(rawInviteToken)}`
   const lang: Language = giver.preferredLanguage || exchange.organizerLanguage || 'en'
@@ -283,6 +317,10 @@ export async function sendWishlistReminderNotification(
 
   const idempotencyKey = buildIdempotencyKey('wishlistReminder', exchange.id, participant.id)
   if (await notificationAlreadySent(exchange.id, idempotencyKey)) return
+  if (!rawInviteToken.trim()) {
+    trackEvent(context, 'V2NotificationSkipped', { type: 'wishlistReminder', exchangeId: exchange.id, participantId: participant.id, reason: 'missing_invite_token' })
+    return
+  }
 
   const wishlistLink = `${appBaseUrl()}/wishlist?token=${encodeURIComponent(rawInviteToken)}`
   const unsubUrl = buildUnsubscribeUrl(participant.email)
@@ -305,6 +343,10 @@ export async function sendGiftByReminderNotification(
 
   const idempotencyKey = buildIdempotencyKey('giftByReminder', exchange.id, participant.id)
   if (await notificationAlreadySent(exchange.id, idempotencyKey)) return
+  if (!rawInviteToken.trim()) {
+    trackEvent(context, 'V2NotificationSkipped', { type: 'giftByReminder', exchangeId: exchange.id, participantId: participant.id, reason: 'missing_invite_token' })
+    return
+  }
 
   const matchLink = `${appBaseUrl()}/match?token=${encodeURIComponent(rawInviteToken)}`
   const unsubUrl = buildUnsubscribeUrl(participant.email)
