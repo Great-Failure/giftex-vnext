@@ -1,5 +1,7 @@
 import { CURRENCIES } from './types'
 
+export { CURRENCIES }
+
 /**
  * Format amount with currency symbol and flag
  * @param amount - The amount to format
