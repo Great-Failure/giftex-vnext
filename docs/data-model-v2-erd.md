@@ -23,7 +23,8 @@ erDiagram
         string exchangeType "Phase 1: 'custom' only"
         string status "draft|published|matching|matched|completed|cancelled"
         string name
-        string organizerToken "ADR-001: magic-link, only organizer credential"
+        string organizerTokenHash "SHA-256 of magic-link token"
+        string organizerTokenExpiresAt "optional, ISO 8601 token expiry"
         string organizerEmail "optional"
         string exchangeDate "YYYY-MM-DD"
         string createdAt "ISO 8601"
@@ -34,7 +35,7 @@ erDiagram
         string id PK
         string exchangeId FK "partition key"
         string entityType "= 'invite'"
-        string inviteToken "ADR-001: per-invite, exchange-scoped"
+        string inviteTokenHash "SHA-256 of per-invite, exchange-scoped token"
         string email
         string status "sent|accepted|declined|expired"
         string sentAt "ISO 8601"
@@ -110,7 +111,7 @@ erDiagram
 | --- | --- | --- |
 | `participant` | `Participant.id` | After RSVP accept (RSVPAccepted, WishlistReminder, MatchReveal, GiftByReminder) |
 | `invite` | `Invite.id` | InviteSent — before a Participant exists |
-| `organizer` | `Exchange.id` | Organizer-targeted notifications (organizer is identified by `Exchange.organizerToken`, not a separate user record) |
+| `organizer` | `Exchange.id` | Organizer-targeted notifications (organizer is identified by `Exchange.organizerTokenHash`, not a separate user record) |
 
 This is enforced at the application layer, not by foreign-key constraints (Cosmos has none).
 

@@ -52,7 +52,7 @@ The default indexing policy is fine for Phase 1. Two composite indexes will pay 
 Path-level recommendations:
 
 - Exclude `description`, `generalNotes`, and `notes` from indexing — large free-text fields rarely filtered on, but expensive to keep indexed.
-- Keep `code`, `organizerToken`, and `inviteToken` indexed (frequent point lookups by these values).
+- Keep `code`, `organizerTokenHash`, and `inviteTokenHash` indexed (frequent point lookups by these values).
 
 ### Uniqueness
 
@@ -61,9 +61,16 @@ Cosmos cannot enforce composite uniqueness across partitions, so the following a
 | Field | Scope | Lookup strategy |
 | --- | --- | --- |
 | `Exchange.code` | Container-global | Query `WHERE c.entityType='exchange' AND c.code=@code` before insert |
-| `Invite.inviteToken` | Container-global | Generate from `crypto.randomUUID()` (collision probability negligible) |
-| `Exchange.organizerToken` | Container-global | Same as inviteToken |
+| `Invite.inviteTokenHash` | Container-global | Query by `exchangeId` + hash (`${exchangeId}.${secret}` token format keeps lookup single-partition) |
+| `Exchange.organizerTokenHash` | Container-global | Query by `exchangeId` + hash (`${exchangeId}.${secret}` token format keeps lookup single-partition) |
 | `(Invite.exchangeId, Invite.email)` | Per-exchange | Query existing invites in the partition; one invite per email per exchange |
+
+### Authentication token storage and TTL
+
+- Organizer and invite tokens are generated as `${exchangeId}.${secret}`.
+- Only `SHA-256` hashes are stored in Cosmos (`organizerTokenHash`, `inviteTokenHash`).
+- Organizer tokens expire via `Exchange.organizerTokenExpiresAt` (default `AUTH_ORGANIZER_TOKEN_TTL_DAYS=90`).
+- Raw tokens are only emitted in links during create/recovery flows and are never persisted at rest.
 
 ---
 
@@ -96,7 +103,8 @@ Every entity extends the `CosmosDocument` base shape:
 | `generalNotes` | `string?` | |
 | `rsvpDeadline` | `string?` | ISO 8601. |
 | `wishlistDeadline` | `string?` | ISO 8601. |
-| `organizerToken` | `string` | **ADR-001:** the only credential for organizer access. Exchange-scoped magic link. |
+| `organizerTokenHash` | `string` | SHA-256 hash of organizer credential. Raw token is only returned once in link flow. |
+| `organizerTokenExpiresAt` | `string?` | ISO 8601 expiry timestamp for organizer token (default TTL: 90 days, configurable). |
 | `organizerEmail` | `string?` | Used for organizer lifecycle emails (resends, match-ready alerts). |
 | `organizerLanguage` | `Language?` | Email language preference. |
 | `publishedAt` | `string?` | Set on Draft → Published. |
@@ -110,7 +118,7 @@ Every entity extends the `CosmosDocument` base shape:
 | Field | Type | Notes |
 | --- | --- | --- |
 | `entityType` | `'invite'` | Discriminator. |
-| `inviteToken` | `string` | **ADR-001:** per-invite secret; scoped to one exchange. |
+| `inviteTokenHash` | `string` | SHA-256 hash of per-invite secret; scoped to one exchange. |
 | `email` | `string` | Required at create. |
 | `suggestedName` | `string?` | Pre-fill on RSVP form; participant can override. |
 | `preferredLanguage` | `Language?` | Email hint. |
@@ -276,8 +284,8 @@ Every ADR-001 acceptance criterion from [issue #2](https://github.com/Great-Fail
 
 | ADR-001 constraint | Schema location |
 | --- | --- |
-| Organizer access = exchange-scoped magic-link token; no full login/SSO/password | `Exchange.organizerToken` — the only organizer credential field |
-| Invite/participant access = per-invite tokens scoped to the exchange | `Invite.inviteToken`; no global participant identity table |
+| Organizer access = exchange-scoped magic-link token; no full login/SSO/password | `Exchange.organizerTokenHash` + `organizerTokenExpiresAt`; raw token never stored |
+| Invite/participant access = per-invite tokens scoped to the exchange | `Invite.inviteTokenHash`; no global participant identity table |
 | Participant schema requires display name only | `Participant.displayName` (required); all profile fields nested in optional `Participant.profile` |
 | Avatar, interests, sizes, pronouns, allergens are optional structured fields | `ParticipantProfile` (all sub-fields optional) |
 | Address/shipping fields are excluded from Phase 1 schemas | **No address/shipping fields exist anywhere** — deliberately absent from Exchange, Invite, Participant, ParticipantProfile |
@@ -294,7 +302,7 @@ Every ADR-001 acceptance criterion from [issue #2](https://github.com/Great-Fail
 | Partition key | `/id` | `/exchangeId` |
 | Status | None (implicit via field presence) | Explicit `Exchange.status` enum + state machine |
 | Participants | Embedded `participants[]` array on Game | Separate `Participant` documents |
-| Invitations | Single `invitationToken` on Game | One `Invite` document per recipient with `inviteToken` and RSVP state |
+| Invitations | Single `invitationToken` on Game | One `Invite` document per recipient with `inviteTokenHash` and RSVP state |
 | Wishlist | Single string fields per participant (`desiredGift`, `wish`) | Multi-item `WishlistItem` documents per participant with `priority` |
 | Assignments | Embedded `assignments[]` array (in-memory shuffle) | Persisted `Match` documents with reveal status |
 | Email dedup | None | `NotificationEvent` records with `idempotencyKey` |
