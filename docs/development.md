@@ -96,6 +96,17 @@ F5                            # Start debugging (🚀 Full Stack)
 
 ---
 
+### 📐 Architecture & Data Model References
+
+Design documents you'll want when working on Phase 1 features:
+
+- **[data-model-v2.md](data-model-v2.md)** — Exchange-centric v2 data model (Phase 1). Entity field tables, Cosmos DB partitioning strategy, status state machines, validation rules, and ADR-001 compliance map. Source of truth for downstream API and frontend work.
+- **[data-model-v2-erd.md](data-model-v2-erd.md)** — Entity-relationship diagram (Mermaid) for the six v2 entities: Exchange, Invite, Participant, WishlistItem, Match, NotificationEvent.
+
+Implementation types live in `api/src/shared/v2/types.ts` (source) and `src/lib/v2/types.ts` (frontend mirror).
+
+---
+
 ## 🎓 Learning Paths
 
 ### Path 1: I want to develop in the cloud (easiest)
