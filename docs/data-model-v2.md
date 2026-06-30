@@ -202,7 +202,7 @@ draft ──▶ published ──▶ matching ──▶ matched ──▶ complet
 | `cancelled` | *(terminal)* | — |
 
 Notes:
-- A failed matching attempt does **not** transition; it stays in `matching` until the engine succeeds or the organizer cancels.
+- A failed matching attempt does **not** transition; it stays in `matching` until the engine succeeds.
 - Re-running matching from `matched` is out of scope for Phase 1 (carries forward as Phase 2 reassignment work).
 
 ### InviteStatus

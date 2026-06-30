@@ -262,8 +262,8 @@ export interface Participant extends CosmosDocument {
 
 /**
  * Wishlist priority. String union chosen for readability in API responses and
- * forward-compatibility — new tiers can be added without renumbering. Final
- * shape may be revisited during #10; see plan.md "Open considerations".
+ * forward-compatibility — new tiers can be added without renumbering. The
+ * current shape is intentionally simple and extensible.
  */
 export type WishlistPriority = 'high' | 'medium' | 'low'
 
