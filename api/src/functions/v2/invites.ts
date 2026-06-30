@@ -7,7 +7,7 @@ import {
   listInvitesByExchange,
   listParticipantsByExchange,
 } from '../../shared/v2/cosmosdb'
-import { sendInviteSentEmail } from '../../shared/v2/email'
+import { sendInviteNotification } from '../../shared/v2/notifications'
 import { Invite, Language } from '../../shared/v2/types'
 import {
   authErrorResponse,
@@ -134,9 +134,10 @@ export async function createInvitesHandler(
       created.push(saved)
       tokensByInviteId[id] = rawInviteToken
 
-      const emailResult = await sendInviteSentEmail(organizer.exchange, saved, rawInviteToken)
-      if (!emailResult.success) {
-        trackEvent(context, 'V2InviteEmailFailed', { requestId, inviteId: id, error: emailResult.error || '' })
+      try {
+        await sendInviteNotification(context, organizer.exchange, saved, rawInviteToken)
+      } catch {
+        trackEvent(context, 'V2InviteEmailFailed', { requestId, inviteId: id, error: 'notification_failed' })
       }
     }
 

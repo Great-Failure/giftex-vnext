@@ -186,7 +186,7 @@ export async function updateWishlistItem(
     priority: WishlistPriority
   }>,
 ) {
-  const res = await fetch(`${V2_BASE}/wishlist/${itemId}`, {
+  const res = await fetch(`${V2_BASE}/participants/me/wishlist/${itemId}`, {
     method: 'PATCH',
     headers: authHeader(inviteToken),
     body: JSON.stringify(patch),
@@ -196,7 +196,7 @@ export async function updateWishlistItem(
 }
 
 export async function deleteWishlistItem(inviteToken: string, itemId: string) {
-  const res = await fetch(`${V2_BASE}/wishlist/${itemId}`, {
+  const res = await fetch(`${V2_BASE}/participants/me/wishlist/${itemId}`, {
     method: 'DELETE',
     headers: authHeader(inviteToken),
   })

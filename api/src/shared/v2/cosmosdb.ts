@@ -1,5 +1,5 @@
 import { CosmosClient, Container } from '@azure/cosmos'
-import { Exchange, ExchangeContainerDocument, Invite, Match, Participant, WishlistItem } from './types'
+import { Exchange, ExchangeContainerDocument, Invite, Match, NotificationEvent, Participant, WishlistItem } from './types'
 
 let cosmosClient: CosmosClient | null = null
 let v2Container: Container | null = null
@@ -131,6 +131,23 @@ export async function queryInviteByTokenHash(exchangeId: string, inviteTokenHash
     .query<Invite>(querySpec, { partitionKey: exchangeId })
     .fetchAll()
 
+  return resources[0] || null
+}
+
+export async function queryNotificationByIdempotencyKey(
+  exchangeId: string,
+  idempotencyKey: string,
+): Promise<NotificationEvent | null> {
+  const container = await getV2Container()
+  const querySpec = {
+    query: 'SELECT TOP 1 * FROM c WHERE c.exchangeId = @exchangeId AND c.entityType = @entityType AND c.idempotencyKey = @idempotencyKey',
+    parameters: [
+      { name: '@exchangeId', value: exchangeId },
+      { name: '@entityType', value: 'notificationEvent' },
+      { name: '@idempotencyKey', value: idempotencyKey },
+    ],
+  }
+  const { resources } = await container.items.query<NotificationEvent>(querySpec).fetchAll()
   return resources[0] || null
 }
 

@@ -2,7 +2,7 @@ import { app, HttpRequest, HttpResponseInit, InvocationContext } from '@azure/fu
 import { trackError, trackEvent } from '../../shared/telemetry'
 import { ApiAuthError, authenticateRequest, generateToken, requireOrganizer } from '../../shared/v2/auth'
 import { listInvitesByExchange, replaceDocument } from '../../shared/v2/cosmosdb'
-import { sendInviteSentEmail } from '../../shared/v2/email'
+import { sendInviteNotification } from '../../shared/v2/notifications'
 import { Invite } from '../../shared/v2/types'
 import {
   authErrorResponse,
@@ -51,9 +51,10 @@ export async function resendInviteHandler(
     }
     const saved = await replaceDocument(updated)
 
-    const emailResult = await sendInviteSentEmail(organizer.exchange, saved, rawInviteToken)
-    if (!emailResult.success) {
-      trackEvent(context, 'V2InviteResendEmailFailed', { requestId, inviteId, error: emailResult.error || '' })
+    try {
+      await sendInviteNotification(context, organizer.exchange, saved, rawInviteToken)
+    } catch {
+      trackEvent(context, 'V2InviteResendEmailFailed', { requestId, inviteId, error: 'notification_failed' })
     }
 
     trackEvent(context, 'V2InviteResent', { requestId, exchangeId, inviteId })

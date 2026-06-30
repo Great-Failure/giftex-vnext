@@ -9,7 +9,7 @@ import {
   listParticipantsByExchange,
   replaceDocument,
 } from '../../shared/v2/cosmosdb'
-import { sendMatchRevealEmail } from '../../shared/v2/email'
+import { sendMatchRevealNotification } from '../../shared/v2/notifications'
 import { assertTransition, LifecycleError } from '../../shared/v2/exchange-lifecycle'
 import { generateMatches, regenerateMatchesWithLocks } from '../../shared/v2/matching'
 import { Exchange, Match, PARTICIPANT_BOUNDS } from '../../shared/v2/types'
@@ -110,7 +110,7 @@ export async function runMatchHandler(
         // the generic /match page; in production the giver navigates there
         // with the invite token they already have. For Phase 1 this is the
         // intended behavior; #12 will redesign with proper magic links.
-        await sendMatchRevealEmail(updated, giver, receiver, rawToken)
+        await sendMatchRevealNotification(context, updated, giver, receiver, rawToken)
         await replaceDocument({
           ...m,
           revealStatus: 'revealed',

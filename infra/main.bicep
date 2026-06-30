@@ -62,6 +62,9 @@ param repositoryBranch string = 'main'
 @description('Deployment ID for globally unique naming (e.g., user identifier from GitHub Actions)')
 param deploymentId string = ''
 
+@secure()
+param unsubscribeHmacSecret string = ''
+
 // ============================================================================
 // Variables
 // ============================================================================
@@ -336,6 +339,7 @@ resource staticWebAppSettings 'Microsoft.Web/staticSites/config@2024-11-01' = {
       // For PR: Each PR gets its own SWA with a random Azure-assigned hostname
       // For staging/prod: Uses the shared resource's actual hostname
       APP_BASE_URL: 'https://${staticWebApp.properties.defaultHostname}'
+      UNSUBSCRIBE_HMAC_SECRET: unsubscribeHmacSecret
     },
     enableEmailService ? {
       ACS_CONNECTION_STRING: communicationService!.listKeys().primaryConnectionString
