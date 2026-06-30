@@ -33,7 +33,7 @@ export async function initializeV2Container(): Promise<void> {
   })
 
   const databaseId = process.env.COSMOS_DATABASE_NAME || DEFAULT_DB_NAME
-  const containerId = process.env.COSMOS_V2_CONTAINER_NAME || process.env.COSMOS_CONTAINER_NAME || DEFAULT_CONTAINER_NAME
+  const containerId = process.env.COSMOS_V2_CONTAINER_NAME || DEFAULT_CONTAINER_NAME
 
   await cosmosClient.databases.createIfNotExists({ id: databaseId })
   const database = cosmosClient.database(databaseId)

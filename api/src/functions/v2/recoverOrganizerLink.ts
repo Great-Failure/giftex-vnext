@@ -88,13 +88,13 @@ export async function recoverOrganizerLinkHandler(request: HttpRequest, context:
       }
 
       const { token, tokenHash } = generateToken(exchange.id)
-      const now = new Date().toISOString()
+      const now = new Date()
 
       const updatedExchange = {
         ...exchange,
         organizerTokenHash: tokenHash,
-        organizerTokenExpiresAt: createOrganizerTokenExpiry(),
-        updatedAt: now,
+        organizerTokenExpiresAt: createOrganizerTokenExpiry(now),
+        updatedAt: now.toISOString(),
       }
 
       await replaceExchange(updatedExchange)

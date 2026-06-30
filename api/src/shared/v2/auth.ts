@@ -97,6 +97,7 @@ export function splitToken(rawToken: string): { exchangeId: string; secret: stri
 }
 
 export function generateToken(exchangeId: string): { token: string; tokenHash: string } {
+  // 18 bytes => 144 bits entropy, exceeding the 128-bit minimum for unguessable tokens.
   const secret = crypto.randomBytes(18).toString('base64url')
   const token = `${exchangeId}${TOKEN_SEPARATOR}${secret}`
 
