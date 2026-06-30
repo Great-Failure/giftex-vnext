@@ -142,6 +142,21 @@ export interface Exchange extends CosmosDocument {
   organizerEmail?: string
   organizerLanguage?: Language
 
+  /**
+   * Maximum accepted participants. Default 50 per ADR-001; organizer may set
+   * lower. Enforced by the invite subsystem and the matching engine.
+   */
+  maxParticipants?: number
+
+  /**
+   * Optional scheduled reveal time (ISO 8601). When unset, reveal is
+   * immediate at the `matched` transition. When set in the future, Match
+   * documents stay `revealStatus: 'pending'` until either the scheduled
+   * reveal timer fires or a participant pulls `GET /api/v2/matches/me`
+   * on/after this time.
+   */
+  revealAt?: string
+
   // Lifecycle timestamps. Set when the corresponding transition occurs.
   publishedAt?: string
   matchingStartedAt?: string
@@ -191,6 +206,16 @@ export interface Invite extends CosmosDocument {
   respondedAt?: string
   /** ISO 8601 timestamp at which the invite is considered expired. */
   expiresAt?: string
+
+  /**
+   * True when this invite was created while `Exchange.status === 'matching'`
+   * (late-join flow per ADR-001). Such invites require organizer approval
+   * before the participant can RSVP-accept.
+   */
+  requiresApproval?: boolean
+
+  /** ISO 8601 timestamp the organizer approved a late-join invite. */
+  approvedAt?: string
 
   /**
    * Set when `status === 'accepted'`. References the Participant document
