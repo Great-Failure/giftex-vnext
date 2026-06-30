@@ -89,7 +89,7 @@ export function InvitePanel({ exchangeId, organizerToken, maxParticipants, parti
   }, [exchangeId, organizerToken, t])
 
   const activeInviteCount = useMemo(
-    () => invites.filter((invite) => invite.status === 'sent' || invite.status === 'accepted').length,
+    () => invites.filter((invite) => invite.status === 'sent').length,
     [invites],
   )
   const projectedCount = participantCount + activeInviteCount

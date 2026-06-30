@@ -104,13 +104,13 @@ export async function runMatchHandler(
         const giver = participants.find((p) => p.id === m.giverParticipantId)!
         const receiver = participants.find((p) => p.id === m.receiverParticipantId)!
         const giverInvite = inviteById[giver.inviteId]
-        const rawToken = giverInvite ? `${exchangeId}.<token-rotated>` : ''
-        // Note: we don't have the giver's raw invite token at rest (we only
-        // store the hash). The reveal email therefore deep-links the user to
-        // the generic /match page; in production the giver navigates there
-        // with the invite token they already have. For Phase 1 this is the
-        // intended behavior; #12 will redesign with proper magic links.
-        await sendMatchRevealNotification(context, updated, giver, receiver, rawToken)
+        const rawToken = ''
+        // We only store hashed invite tokens, so immediate reveal emails cannot
+        // include a valid deep link here. sendMatchRevealNotification will skip
+        // delivery when the raw token is unavailable.
+        if (giverInvite) {
+          await sendMatchRevealNotification(context, updated, giver, receiver, rawToken)
+        }
         await replaceDocument({
           ...m,
           revealStatus: 'revealed',

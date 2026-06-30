@@ -60,9 +60,8 @@ export async function revealMatchesHandler(_timer: Timer, context: InvocationCon
           continue
         }
 
-        // We don't store raw invite tokens at rest. The reveal email therefore
-        // links the giver to the generic /match page; they reuse the invite
-        // token they already have. #12 will redesign this with proper tokens.
+        // We only store hashed invite tokens at rest, so timer-based reveal
+        // emails are skipped until we have a safe way to issue fresh links.
         try {
           await sendMatchRevealNotification(context, exchange, giver, receiver, '')
         } catch (error) {
