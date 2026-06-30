@@ -6,6 +6,7 @@
 import { initializeStorage } from './shared/cosmosdb'
 import { initializeEmailService } from './shared/email-service'
 import { initializeTelemetry } from './shared/telemetry'
+import { initializeV2Container } from './shared/v2/cosmosdb'
 
 // Initialize all services
 ;(async () => {
@@ -17,6 +18,9 @@ import { initializeTelemetry } from './shared/telemetry'
   
   // Initialize optional email service
   initializeEmailService()
+
+  // Initialize v2 exchanges container
+  await initializeV2Container()
 })().catch(err => {
   console.error('Failed to initialize services:', err)
 })
@@ -29,3 +33,5 @@ import './functions/updateGame'
 import './functions/deleteGame'
 import './functions/sendEmail'
 import './functions/cleanupExpiredGames'
+import './functions/v2/me'
+import './functions/v2/recoverOrganizerLink'

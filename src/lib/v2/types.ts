@@ -133,10 +133,12 @@ export interface Exchange extends CosmosDocument {
   wishlistDeadline?: string
 
   /**
-   * ADR-001: organizer access is gated by this exchange-scoped magic-link token.
+   * SHA-256 hash of the organizer magic-link token.
    * No SSO/login/password account model in Phase 1.
    */
-  organizerToken: string
+  organizerTokenHash: string
+  /** ISO 8601 timestamp when the organizer token expires. */
+  organizerTokenExpiresAt?: string
   organizerEmail?: string
   organizerLanguage?: Language
 
@@ -168,8 +170,8 @@ export type InviteStatus = 'sent' | 'accepted' | 'declined' | 'expired'
 export interface Invite extends CosmosDocument {
   entityType: 'invite'
 
-  /** Non-guessable secret embedded in the RSVP link. */
-  inviteToken: string
+  /** SHA-256 hash of the non-guessable secret embedded in the RSVP link. */
+  inviteTokenHash: string
 
   email: string
 
