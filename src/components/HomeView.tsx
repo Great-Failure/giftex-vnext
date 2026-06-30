@@ -8,13 +8,14 @@ import { LanguageToggle } from './LanguageToggle'
 
 interface HomeViewProps {
   onCreateGame: () => void
+  onCreateV2Exchange?: () => void
   onJoinGame: (code: string) => void
   onPrivacy?: () => void
   onOrganizerGuide?: () => void
   onParticipantGuide?: () => void
 }
 
-export function HomeView({ onCreateGame, onJoinGame, onPrivacy, onOrganizerGuide, onParticipantGuide }: HomeViewProps) {
+export function HomeView({ onCreateGame, onCreateV2Exchange, onJoinGame, onPrivacy, onOrganizerGuide, onParticipantGuide }: HomeViewProps) {
   const [gameCode, setGameCode] = useState('')
   const { t } = useLanguage()
 
@@ -56,6 +57,17 @@ export function HomeView({ onCreateGame, onJoinGame, onPrivacy, onOrganizerGuide
                 <Gift size={24} weight="bold" />
                 {t('createGame')}
               </Button>
+              {onCreateV2Exchange && (
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="w-full gap-2 text-base font-semibold"
+                  onClick={onCreateV2Exchange}
+                >
+                  <Gift size={24} weight="duotone" />
+                  {t('v2GoToV2Exchange')}
+                </Button>
+              )}
             </Card>
 
             <div className="relative">
