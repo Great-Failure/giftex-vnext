@@ -1,7 +1,13 @@
 # ============================================================================
-# Zava Gift Exchange - CI/CD Pipeline
+# Zava Gift Exchange - CI/CD Pipeline (DEPRECATED — manual trigger only)
 # ============================================================================
-# Environment Strategy:
+# ⚠️ DEPRECATED: This workflow is superseded by the Git-Ape workflows
+# (.github/workflows/git-ape-{plan,deploy,destroy,verify}.yml). It no longer
+# runs on push or pull_request — only via workflow_dispatch — so deployments
+# don't double-fire. The deployment logic is preserved as a manual fallback
+# while Git-Ape is validated end-to-end.
+#
+# Original Environment Strategy:
 # - PR: Ephemeral resource group per PR (auto-created and deleted)
 # - QA: Isolated resource group (`zavaexchangegift-qa`) (deployed on main)
 # - Prod: Production environment (deployed on main after QA E2E tests pass)
@@ -23,14 +29,15 @@
 # - Azure Communication Services (if enabled)
 # ============================================================================
 
-name: CI/CD
+name: CI/CD (legacy, manual trigger only)
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    types: [opened, synchronize, reopened, closed]
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      reason:
+        description: "Why are you running the legacy pipeline? (audit log)"
+        required: true
+        default: "Git-Ape fallback / hotfix"
 
 env:
   NODE_VERSION: '20'
