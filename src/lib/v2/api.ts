@@ -67,6 +67,11 @@ export async function getExchange(exchangeId: string, organizerToken: string) {
       wishlistItems: number
       matches: number
     }
+    participants?: Array<{
+      id: string
+      displayName: string
+      wishlistItemCount: number
+    }>
   }>(res)
 }
 
