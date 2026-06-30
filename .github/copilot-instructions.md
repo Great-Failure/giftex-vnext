@@ -211,3 +211,17 @@ az deployment group create \
 
 ## Types
 Types in `src/lib/types.ts` and `api/src/shared/types.ts` - keep in sync manually.
+
+## Compliance & Azure Policy
+
+### Compliance Frameworks
+- **Primary:** NIST SP 800-53 Rev 5
+
+### Policy Enforcement Mode
+- **Default:** Audit (use `Audit`/`AuditIfNotExists` effects)
+
+### Policy Advisor Integration
+- Use `/azure-policy-advisor` skill to assess ARM templates against NIST SP 800-53 Rev 5
+- Query Microsoft Learn for current built-in policy definitions
+- Output `policy-assessment.md` and `policy-recommendations.json` to deployment directory
+- Policy gate is **advisory** (not blocking)
