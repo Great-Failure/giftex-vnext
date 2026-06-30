@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { ArrowLeft, CircleNotch } from '@phosphor-icons/react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
@@ -135,7 +135,7 @@ export function ExchangeOrganizerView() {
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadExchange = async () => {
+  const loadExchange = useCallback(async () => {
     if (!exchangeId || !organizerToken) {
       setError(t('v2Error'))
       setIsLoading(false)
@@ -156,11 +156,11 @@ export function ExchangeOrganizerView() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [exchangeId, organizerToken, t])
 
   useEffect(() => {
     void loadExchange()
-  }, [exchangeId, organizerToken])
+  }, [loadExchange])
 
   const isDraft = exchange?.status === 'draft'
   const canInvite = exchange?.status === 'published' || exchange?.status === 'matching' || exchange?.status === 'matched'
