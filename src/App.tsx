@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { Route, Routes, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Toaster } from '@/components/ui/sonner'
 import { LanguageProvider } from '@/components/LanguageProvider'
 import { useLanguage } from '@/components/useLanguage'
@@ -16,6 +17,11 @@ import { ParticipantGuideView } from '@/components/ParticipantGuideView'
 import { JoinInvitationView } from '@/components/JoinInvitationView'
 import { CookieConsentBanner } from '@/components/CookieConsentBanner'
 import { LoadingView } from '@/components/LoadingView'
+import { CreateExchangeV2View } from '@/components/v2/CreateExchangeV2View'
+import { ExchangeOrganizerView } from '@/components/v2/ExchangeOrganizerView'
+import { RSVPView } from '@/components/v2/RSVPView'
+import { WishlistView } from '@/components/v2/WishlistView'
+import { MatchRevealView } from '@/components/v2/MatchRevealView'
 import { Game, Participant } from '@/lib/types'
 import { useLocalStorage } from '@/hooks/use-local-storage'
 import { checkApiStatus, getGameAPI, CreateGameResponse } from '@/lib/api'
@@ -67,6 +73,9 @@ function StatusBanner({ bannerType, isCheckingApi }: { bannerType: BannerType; i
 }
 
 function App() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [view, setView] = useState<View>('home')
   const [games, setGames] = useLocalStorage<Record<string, Game>>('games', {})
   const [currentGameCode, setCurrentGameCode] = useState<string>('')
@@ -439,8 +448,7 @@ function App() {
     setCurrentParticipant(null)
     setErrorType(null)
     // Navigate back to root path but preserve language
-    const params = new URLSearchParams(window.location.search)
-    const lang = params.get('lang')
+    const lang = searchParams.get('lang')
     const newUrl = lang ? `/?lang=${lang}` : '/'
     window.history.pushState({}, '', newUrl)
   }
@@ -461,8 +469,7 @@ function App() {
   }
 
   const handlePrivacy = () => {
-    const params = new URLSearchParams(window.location.search)
-    const lang = params.get('lang')
+    const lang = searchParams.get('lang')
     const url = lang ? `/privacy?lang=${lang}` : '/privacy'
     window.history.pushState({}, '', url)
     setView('privacy')
@@ -494,6 +501,31 @@ function App() {
   }
 
   const currentGame = games?.[currentGameCode]
+  const v2Routes = ['/exchanges/new', '/rsvp', '/wishlist', '/match']
+  const isV2Route =
+    v2Routes.some((route) => location.pathname.startsWith(route)) ||
+    /^\/exchanges\/[^/]+\/organizer/.test(location.pathname)
+
+  if (isV2Route) {
+    return (
+      <LanguageProvider>
+        <div className="min-h-screen flex flex-col">
+          <StatusBanner bannerType={bannerType} isCheckingApi={isCheckingApi} />
+          <div className="flex-1">
+            <Routes>
+              <Route path="/exchanges/new" element={<CreateExchangeV2View />} />
+              <Route path="/exchanges/:exchangeId/organizer" element={<ExchangeOrganizerView />} />
+              <Route path="/rsvp" element={<RSVPView />} />
+              <Route path="/wishlist" element={<WishlistView />} />
+              <Route path="/match" element={<MatchRevealView />} />
+            </Routes>
+          </div>
+          <Toaster position="top-center" />
+          <CookieConsentBanner />
+        </div>
+      </LanguageProvider>
+    )
+  }
 
   return (
     <LanguageProvider>
@@ -505,6 +537,7 @@ function App() {
           {!isLoadingGame && view === 'home' && (
             <HomeView 
               onCreateGame={handleCreateGame} 
+              onCreateV2Exchange={() => navigate('/exchanges/new')}
               onJoinGame={handleJoinGame} 
               onPrivacy={handlePrivacy}
               onOrganizerGuide={() => {

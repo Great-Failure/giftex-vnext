@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client'
+import { BrowserRouter } from 'react-router-dom'
 import { ErrorBoundary } from "react-error-boundary";
 
 import App from './App.tsx'
@@ -9,7 +10,9 @@ import "./styles/theme.css"
 import "./index.css"
 
 createRoot(document.getElementById('app')!).render(
-  <ErrorBoundary FallbackComponent={ErrorFallback}>
-    <App />
-   </ErrorBoundary>
+  <BrowserRouter>
+    <ErrorBoundary FallbackComponent={ErrorFallback}>
+      <App />
+    </ErrorBoundary>
+  </BrowserRouter>
 )

@@ -6,7 +6,7 @@ import {
   listParticipantsByExchange,
   replaceDocument,
 } from '../../shared/v2/cosmosdb'
-import { sendMatchRevealEmail } from '../../shared/v2/email'
+import { sendMatchRevealNotification } from '../../shared/v2/notifications'
 
 /**
  * Timer trigger — every 15 minutes. Finds Exchanges in status 'matched' whose
@@ -60,19 +60,18 @@ export async function revealMatchesHandler(_timer: Timer, context: InvocationCon
           continue
         }
 
-        // We don't store raw invite tokens at rest. The reveal email therefore
-        // links the giver to the generic /match page; they reuse the invite
-        // token they already have. #12 will redesign this with proper tokens.
-        const emailResult = await sendMatchRevealEmail(exchange, giver, receiver, '')
-        if (!emailResult.success) {
+        // We only store hashed invite tokens at rest, so timer-based reveal
+        // emails are skipped until we have a safe way to issue fresh links.
+        try {
+          await sendMatchRevealNotification(context, exchange, giver, receiver, '')
+        } catch (error) {
           totalEmailFailed += 1
           trackEvent(context, 'V2RevealEmailFailed', {
             requestId,
             exchangeId: exchange.id,
             matchId: m.id,
-            error: emailResult.error || '',
+            error: error instanceof Error ? error.message : 'notification_failed',
           })
-          // Do not mark revealed if the email failed — let the next tick retry.
           continue
         }
 

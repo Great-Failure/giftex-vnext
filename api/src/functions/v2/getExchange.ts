@@ -30,6 +30,11 @@ export async function getExchangeHandler(request: HttpRequest, context: Invocati
 
     trackEvent(context, 'V2ExchangeFetched', { requestId, exchangeId })
 
+    const wishlistCountsByParticipant = wishlistItems.reduce<Record<string, number>>((acc, item) => {
+      acc[item.participantId] = (acc[item.participantId] || 0) + 1
+      return acc
+    }, {})
+
     return {
       status: 200,
       jsonBody: {
@@ -41,6 +46,11 @@ export async function getExchangeHandler(request: HttpRequest, context: Invocati
           wishlistItems: wishlistItems.length,
           matches: matches.length,
         },
+        participants: participants.map((participant) => ({
+          id: participant.id,
+          displayName: participant.displayName,
+          wishlistItemCount: wishlistCountsByParticipant[participant.id] || 0,
+        })),
       },
     }
   } catch (error) {

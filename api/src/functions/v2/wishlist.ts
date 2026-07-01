@@ -366,10 +366,24 @@ app.http('v2PatchWishlistItem', {
   handler: patchWishlistItemHandler,
 })
 
+app.http('v2PatchMyWishlistItem', {
+  methods: ['PATCH'],
+  authLevel: 'anonymous',
+  route: 'v2/participants/me/wishlist/{itemId}',
+  handler: patchWishlistItemHandler,
+})
+
 app.http('v2DeleteWishlistItem', {
   methods: ['DELETE'],
   authLevel: 'anonymous',
   route: 'v2/wishlist/{itemId}',
+  handler: deleteWishlistItemHandler,
+})
+
+app.http('v2DeleteMyWishlistItem', {
+  methods: ['DELETE'],
+  authLevel: 'anonymous',
+  route: 'v2/participants/me/wishlist/{itemId}',
   handler: deleteWishlistItemHandler,
 })
 

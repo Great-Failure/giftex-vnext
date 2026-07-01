@@ -4,9 +4,9 @@ import { trackError, trackEvent } from '../../shared/telemetry'
 import {
   ApiAuthError,
   authenticateRequest,
-  requireParticipantOrOrganizer,
 } from '../../shared/v2/auth'
 import { createDocument, replaceDocument } from '../../shared/v2/cosmosdb'
+import { sendRsvpAcceptedNotification } from '../../shared/v2/notifications'
 import { Invite, Language, Participant, ParticipantProfile } from '../../shared/v2/types'
 import {
   authErrorResponse,
@@ -113,6 +113,7 @@ export async function acceptInviteHandler(
 
     const now = new Date().toISOString()
     const participantId = generateId()
+    const rawToken = request.headers.get('authorization')?.replace(/^Bearer\s+/i, '') || ''
 
     const participant: Participant = {
       id: participantId,
@@ -137,6 +138,12 @@ export async function acceptInviteHandler(
       participantId,
     }
     await replaceDocument(updatedInvite)
+
+    try {
+      await sendRsvpAcceptedNotification(context, exchange, participant, rawToken)
+    } catch {
+      // Non-fatal notification failure.
+    }
 
     trackEvent(context, 'V2InviteAccepted', {
       requestId,
