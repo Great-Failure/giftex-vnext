@@ -25,8 +25,6 @@ jobs:
           fetch-depth: 0
 
       - name: Install GitHub Copilot CLI
-        env:
-          GH_TOKEN: ${{ secrets.COPILOT_CLI_TOKEN }}
         run: |
           curl -fsSL https://gh.io/copilot-install | bash
           echo "Installed Copilot CLI version:"
@@ -34,7 +32,8 @@ jobs:
                     
       - name: Analyze and generate tests with Copilot
         env:
-          GH_TOKEN: ${{ secrets.COPILOT_CLI_TOKEN }}
+          GITHUB_MCP_TOKEN: ${{ secrets.GITHUB_TOKEN }}        # Workflow token for MCP GitHub operations (issues)
+          GITHUB_TOKEN: ${{ secrets.COPILOT_CLI_TOKEN }}       # Personal PAT for Copilot API authentication
         run: |
           echo "Analyzing commit ${{ github.sha }} for test coverage..."
           echo "Source files changed: ${{ steps.changes.outputs.source_count }}"
